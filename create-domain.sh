@@ -1,0 +1,1 @@
+aws es create-elasticsearch-domain --domain-name ansaf-testing-domain --elasticsearch-version 7.10 --elasticsearch-cluster-config file://es1.json --ebs-options file://es2.json --profile product --region us-east-1 --no-verify-ssl

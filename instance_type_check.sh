@@ -1,0 +1,1 @@
+aws es describe-elasticsearch-domain-config --domain-name ansaf-testing-domain --profile product --region us-east-1 --no-verify-ssl --query 'DomainConfig.ElasticsearchClusterConfig.Options.InstanceType'

@@ -1,0 +1,6 @@
+{
+    "InstanceType": "r6g.large.elasticsearch",
+    "InstanceCount": 1,
+    "DedicatedMasterEnabled": "false",
+    "ZoneAwarenessEnabled": "false"
+}

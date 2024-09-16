@@ -1,0 +1,126 @@
+#------------------------------------------------------------------------------------#
+##  Copyright ? Genpact 2018. All Rights Reserved.                                  ##
+##  Ltd trading as G in NYSE - Registered in US.                                    ##
+##  Registered Office - Canon's Court, 22 Victoria Street HAMILTON, HM 12, Bermuda. ##
+#------------------------------------------------------------------------------------#
+## Author = 'Pankaj Motwani  (Genpact Limited)'                                     ##
+## Version = '1.0.0'                                                                ##
+## Date = 6-Apr-2018                                                                ##
+#------------------------------------------------------------------------------------#
+AWSTemplateFormatVersion: 2010-09-09
+Description: Core-Elastic Search Cluster Creation - Operations VPC
+#Define the parameters for the CF Stack
+Parameters:
+    Region: 
+        Description: AWS Region
+        Default: eu-west-1
+        Type: String
+        AllowedValues: 
+          - eu-west-1
+          - eu-west-1
+        ConstraintDescription: Select the Region for creation.
+    EnvName:
+        Description: Environment Name
+        Default: val
+        Type: String
+    Productversion:
+        Description: Release Version
+        Default: 1.1
+        Type: Number
+    EnvType: 
+        Description: Environment Type
+        Default: val
+        Type: String
+        AllowedValues: 
+          - dev
+          - ml
+          - sit
+          - val
+          - prod
+          - ut
+          - pt
+        ConstraintDescription: Select the Environment for Creation.
+# Instance Type for Elastic Search Cluster - can be selected as per requirement        
+    InstanceType:
+        Description: Instance Type
+        Default: r5.xlarge
+        Type: String
+        AllowedValues: [ m4.large, m4.2xlarge, r5.xlarge ]
+# ElasticSearch Version
+    ESVersion:
+        Description: ES Version
+        Default: 7.10
+        Type: String
+# Instance Count for Elastic Search Cluster - can be selected as per requirement   
+    InstanceCount:
+        Description: Instance Count
+        Default: 2
+        Type: String
+        AllowedPattern: ^[0-9/]*$
+# Master Instance Count for Elastic Search Cluster - can be selected as per requirement   
+    MasterInstanceCount:
+        Description: Master Instance Count
+        Default: 0
+        Type: String
+        AllowedPattern: ^[0-9/]*$
+# EBS Volume Size for Elastic Search Cluster Instance - can be selected as per requirement   
+    VolumeSize:
+        Description: Volume Size
+        Default: 50
+        Type: String
+        AllowedPattern: ^[0-9/]*$
+# EBS Volume Type for Elastic Search Cluster Instance - can be selected as per requirement   
+    VolumeType:
+        Description: Volume Type
+        Default: gp2
+        Type: String
+        AllowedValues: [ gp2, io1, standard ]
+# EBS Volume IOPS for Elastic Search Cluster Instance - can be selected as per requirement   
+    VolumeIOPS:
+        Description: Volume IOPS Unit
+        Default: 100
+        Type: String
+        AllowedPattern: ^[0-9/]*$
+
+# define conditions for creating resources in different regions        
+Conditions:
+  CreateResourcesInNPrimary: !Equals [ !Ref Region, "eu-west-1" ]
+  CreateResourcesInSecondary: !Equals [ !Ref Region, "eu-west-1" ]
+  CreateIOVolume: !Equals [ !Ref VolumeType, "io1" ]
+
+
+Resources:
+  ElasticSearch:
+  Type: "AWS::Elasticsearch::Domain"
+  Properties:
+    DomainName: !Sub pvai-${EnvName}-logs-v6
+    ElasticsearchVersion: !Ref ESVersion
+    ElasticsearchClusterConfig: 
+      DedicatedMasterEnabled: "false"
+      InstanceCount: !Ref InstanceCount
+      ZoneAwarenessEnabled: "true"
+      InstanceType: !Sub ${InstanceType}.elasticsearch
+#      DedicatedMasterType: !Sub ${InstanceType}.elasticsearch
+#      DedicatedMasterCount: !Ref MasterInstanceCount
+    EBSOptions: 
+      EBSEnabled: 'true'
+      Iops: !If [CreateIOVolume, !Ref VolumeIOPS, 0]
+      VolumeSize: !Ref VolumeSize
+      VolumeType: !Ref VolumeType
+    SnapshotOptions: 
+      AutomatedSnapshotStartHour: "0"
+    AdvancedOptions: 
+      rest.action.multi.allow_explicit_index: "true"
+    VPCOptions:
+        SecurityGroupIds: 
+          - !If [CreateResourcesInNPrimary, !ImportValue vpc20B, !If [CreateResourcesInSecondary, !ImportValue vpc30B,""]]
+        SubnetIds:
+          - !If [CreateResourcesInNPrimary, !ImportValue subnet25b0B, !If [CreateResourcesInSecondary, !ImportValue subnet37b0B,""]]
+          - !If [CreateResourcesInNPrimary, !ImportValue subnet28b0B, !If [CreateResourcesInSecondary, !ImportValue subnet36b0B,""]]
+    Tags:
+          - Key: Environment
+            Value: !Ref EnvName
+          - Key: Productversion
+            Value: !Ref Productversion
+            
+Core-ElasticSearchKibana-val-v6

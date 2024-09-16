@@ -1,0 +1,10 @@
+Get Cluster
+
+Get Indices
+
+Sort in ascending Date of creation
+
+if delete older than 30 days
+    delete
+else
+    exit;
